@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   ConflictException,
   HttpException,
@@ -15,7 +14,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createUser(createUserDto: CreateUserDto) {
     try {
@@ -56,14 +55,24 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
+  async findUserByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      this.logger.warn(`User not found: ${email}`);
+      throw new NotFoundException('User not found');
+    }
+    return user
+  }
+  async findUserById(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } })
     if (!user) {
       this.logger.warn(`User not found: ${id}`);
       throw new NotFoundException('User not found');
     }
+    return user
+  }
+
+  async deleteUser(id: number) {
     try {
       return await this.prisma.user.delete({ where: { id } });
     } catch (error) {
