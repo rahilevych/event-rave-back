@@ -7,18 +7,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly databaseService: DatabaseService) { }
 
   async createUser(createUserDto: CreateUserDto) {
     try {
-      const isEmailExist = await this.prisma.user.findUnique({
+      const isEmailExist = await this.databaseService.user.findUnique({
         where: { email: createUserDto.email },
       });
 
@@ -32,7 +32,7 @@ export class UsersService {
         type: argon2.argon2id,
       });
 
-      const user = await this.prisma.user.create({
+      const user = await this.databaseService.user.create({
         data: {
           fullName: createUserDto.fullName,
           email: createUserDto.email,
@@ -56,7 +56,7 @@ export class UsersService {
   }
 
   async findUserByEmail(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } })
+    const user = await this.databaseService.user.findUnique({ where: { email } })
     if (!user) {
       this.logger.warn(`User not found: ${email}`);
       throw new NotFoundException('User not found');
@@ -64,7 +64,7 @@ export class UsersService {
     return user
   }
   async findUserById(id: number) {
-    const user = await this.prisma.user.findUnique({ where: { id } })
+    const user = await this.databaseService.user.findUnique({ where: { id } })
     if (!user) {
       this.logger.warn(`User not found: ${id}`);
       throw new NotFoundException('User not found');
@@ -74,7 +74,7 @@ export class UsersService {
 
   async deleteUser(id: number) {
     try {
-      return await this.prisma.user.delete({ where: { id } });
+      return await this.databaseService.user.delete({ where: { id } });
     } catch (error) {
       this.logger.error('Error deleting user', error);
       if (error instanceof HttpException) {
