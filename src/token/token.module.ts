@@ -2,12 +2,10 @@ import { Module } from '@nestjs/common';
 import { TokenController } from './token.controller';
 import { TokenService } from './token.service';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { UsersModule } from 'src/users/users.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-  imports: [UsersModule, PassportModule, JwtModule.register({}), PrismaModule],
+  imports: [JwtModule.register({}), DatabaseModule],
   controllers: [TokenController],
   providers: [TokenService],
   exports: [TokenService]
