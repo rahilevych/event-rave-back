@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DatabaseService } from 'src/database/database.service';
 
@@ -23,9 +23,12 @@ export class TokenService {
     }
     async deleteTokenfromDB(refreshToken: string) {
         try {
-            const deleted = await this.databaseService.refreshToken.deleteMany({
+            const deleted = await this.databaseService.refreshToken.delete({
                 where: { token: refreshToken },
             });
+            if (!deleted) {
+                throw new NotFoundException('Refresh token not found');
+            }
             return deleted;
         } catch (error) {
             throw new InternalServerErrorException('Could not delete refresh token');

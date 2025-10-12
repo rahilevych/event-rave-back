@@ -23,7 +23,7 @@ export class UsersService {
       });
 
       if (isEmailExist) {
-        this.logger.warn(
+        this.logger.error(
           `Attempt to register with existing email: ${createUserDto.email}`,
         );
         throw new ConflictException('Email is already in use');
@@ -39,6 +39,7 @@ export class UsersService {
           passwordHash,
         },
       });
+
       this.logger.log(`New user registered: ${user.email}`);
       return {
         id: user.id,
@@ -51,7 +52,7 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Something went wrong');
+      throw new InternalServerErrorException('Could not create user');
     }
   }
 
@@ -74,13 +75,15 @@ export class UsersService {
 
   async deleteUser(id: number) {
     try {
-      return await this.databaseService.user.delete({ where: { id } });
+      const user = await this.databaseService.user.delete({ where: { id } });
+      if (!user) throw new NotFoundException('User not found')
+      return user
     } catch (error) {
       this.logger.error('Error deleting user', error);
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException('Something went wrong');
+      throw new InternalServerErrorException('Could not delete user');
     }
   }
 }

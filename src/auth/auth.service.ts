@@ -58,11 +58,11 @@ export class AuthService {
             await this.tokenService.deleteTokenfromDB(refreshToken)
             await this.tokenService.saveTokenInDB(tokens.refreshToken)
             return tokens
+
         } catch (error) {
             if (error instanceof HttpException) {
                 throw error;
             }
-
             this.logger.error('Failed to refresh tokens');
 
             throw new InternalServerErrorException('Could not refresh tokens');
@@ -88,11 +88,8 @@ export class AuthService {
 
     async logout(refreshToken: string) {
         if (!refreshToken) throw new BadRequestException('Refresh token is required');
-
         try {
-            await this.databaseService.refreshToken.delete({
-                where: { token: refreshToken },
-            });
+            await this.tokenService.deleteTokenfromDB(refreshToken);
         } catch (error: unknown) {
 
             if (error instanceof HttpException) {
