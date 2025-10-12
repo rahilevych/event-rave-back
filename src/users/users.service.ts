@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   Injectable,
@@ -9,6 +10,7 @@ import {
 import * as argon2 from 'argon2';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
@@ -57,23 +59,66 @@ export class UsersService {
   }
 
   async findUserByEmail(email: string) {
-    const user = await this.databaseService.user.findUnique({ where: { email } })
-    if (!user) {
-      this.logger.warn(`User not found: ${email}`);
-      throw new NotFoundException('User not found');
+    if (!email) throw new BadRequestException('Invalid user email')
+    try {
+      const user = await this.databaseService.user.findUnique({ where: { email } })
+      if (!user) {
+        this.logger.warn(`User not found: ${email}`);
+        throw new NotFoundException('User not found');
+      }
+      return user
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('Failed to find user');
+
+      throw new InternalServerErrorException('Could not find user');
+
     }
-    return user
+
+
   }
   async findUserById(id: number) {
-    const user = await this.databaseService.user.findUnique({ where: { id } })
-    if (!user) {
-      this.logger.warn(`User not found: ${id}`);
-      throw new NotFoundException('User not found');
+    if (!id) throw new BadRequestException('Invalid user id')
+    try {
+      const user = await this.databaseService.user.findUnique({ where: { id } })
+      if (!user) {
+        this.logger.error(`User not found: ${id}`);
+        throw new NotFoundException('User not found');
+      }
+      return user
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('Failed to find user');
+
+      throw new InternalServerErrorException('Could not find user');
     }
-    return user
   }
 
+  async updateUser(id: number, data: Partial<User>) {
+    if (!id) throw new BadRequestException('Invalid user id')
+    try {
+      const user = await this.databaseService.user.update({ where: { id }, data })
+      if (!user) {
+        this.logger.error(`User not found: ${id}`);
+        throw new NotFoundException('User not found')
+      }
+      return user
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('Failed to update user');
+      throw new InternalServerErrorException('Could not update user');
+    }
+  }
+
+
   async deleteUser(id: number) {
+    if (!id) throw new BadRequestException('Invalid user id')
     try {
       const user = await this.databaseService.user.delete({ where: { id } });
       if (!user) throw new NotFoundException('User not found')
