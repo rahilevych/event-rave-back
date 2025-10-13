@@ -1,4 +1,5 @@
 import { BadRequestException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { DatabaseService } from 'src/database/database.service';
@@ -9,7 +10,7 @@ import { UsersService } from 'src/users/users.service';
 export class AuthService {
     private readonly logger = new Logger(AuthService.name);
     constructor(
-        private readonly jwtService: JwtService, private readonly databaseService: DatabaseService, private readonly usersService: UsersService, private readonly tokenService: TokenService) { }
+        private readonly jwtService: JwtService, private readonly databaseService: DatabaseService, private readonly usersService: UsersService, private readonly tokenService: TokenService, private readonly configService: ConfigService) { }
 
 
     async generateTokens(userId: number) {
@@ -18,8 +19,8 @@ export class AuthService {
             const user = await this.usersService.findUserById(userId)
             if (!user) throw new NotFoundException('User not found')
             const payload = { email: user.email, userId: user.id }
-            const accessToken = await this.jwtService.signAsync(payload, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '30m' })
-            const refreshToken = await this.jwtService.signAsync(payload, { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '15d' })
+            const accessToken = await this.jwtService.signAsync(payload, { secret: this.configService.get<string>('JWT_ACCESS_SECRET'), expiresIn: '30m' })
+            const refreshToken = await this.jwtService.signAsync(payload, { secret: this.configService.get<string>('JWT_REFRESH_SECRET'), expiresIn: '15d' })
             return { accessToken, refreshToken }
         } catch (error) {
             this.logger.error('Failed to generate tokens', error);
@@ -53,9 +54,9 @@ export class AuthService {
         if (!refreshToken) throw new BadRequestException('Token is not valid');
         try {
             await this.verifyToken(refreshToken)
-            const payload = await this.jwtService.verifyAsync(refreshToken, { secret: process.env.JWT_REFRESH_SECRET })
-            const tokens = await this.generateTokens(payload.userId)
+            const payload = await this.jwtService.verifyAsync(refreshToken, { secret: this.configService.get<string>('JWT_REFRESH_SECRET') })
             await this.tokenService.deleteTokenfromDB(refreshToken)
+            const tokens = await this.generateTokens(payload.userId)
             await this.tokenService.saveTokenInDB(tokens.refreshToken)
             return tokens
 
@@ -69,10 +70,10 @@ export class AuthService {
         }
     }
 
-    async validateUser(email: string, passport: string) {
+    async validateUser(email: string, passpord: string) {
         const user = await this.usersService.findUserByEmail(email)
         if (!user) throw new UnauthorizedException('Invalid credentials')
-        const passwordMatches = await argon2.verify(user.passwordHash, passport)
+        const passwordMatches = await argon2.verify(user.passwordHash, passpord)
         if (!passwordMatches) throw new UnauthorizedException('Invalid credentials')
         return user;
     }

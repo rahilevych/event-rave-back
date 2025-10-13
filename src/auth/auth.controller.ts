@@ -4,6 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import express from 'express';
 import { ApiBadRequestResponse, ApiBody, ApiCookieAuth, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -46,6 +47,7 @@ export class AuthController {
     return { message: "User successfully logged out" }
   }
 
+
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiOkResponse({ description: 'Tokens were updated' })
@@ -53,16 +55,13 @@ export class AuthController {
   @ApiNotFoundResponse({ description: 'Refresh token not found' })
   @ApiInternalServerErrorResponse({ description: 'Could not refresh tokens' })
   @ApiCookieAuth('refreshToken')
-
   async refresh(@Req() req: express.Request, @Res({ passthrough: true }) res: express.Response) {
-
     const refreshToken = req.cookies['refreshToken'];
     const tokens = await this.authService.refreshTokens(refreshToken);
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       maxAge: 15 * 24 * 60 * 60 * 1000,
     });
-
     return tokens.accessToken;
   }
 }
