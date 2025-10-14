@@ -1,4 +1,3 @@
-
 import { CreateUserDto } from './dto/create-user.dto';
 import {
   Body,
@@ -9,17 +8,27 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Res,
   UseGuards,
-
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ApiBadRequestResponse, ApiBody, ApiConflictResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import express from 'express';
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) { }
+  constructor(private readonly userService: UsersService) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Create user' })
@@ -27,10 +36,24 @@ export class UsersController {
   @ApiConflictResponse({ description: 'Email is already in use' })
   @ApiInternalServerErrorResponse({ description: 'Could not create user' })
   @ApiBody({ type: CreateUserDto, description: 'Create user data' })
-  async create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @Res({ passthrough: true }) res: express.Response,
+  ) {
+    const data = await this.userService.createUser(createUserDto);
+    res.cookie('refreshToken', data.refreshToken, {
+      httpOnly: true,
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+    });
+    return {
+      token: data.accessToken,
+      user: {
+        fullName: data.user.fullName,
+        id: data.user.id,
+        email: data.user.email,
+      },
+    };
   }
-
 
   @Get(':id')
   @ApiOperation({ summary: 'Find user by id' })
@@ -39,7 +62,7 @@ export class UsersController {
   @ApiInternalServerErrorResponse({ description: 'Could not find user' })
   @ApiBadRequestResponse({ description: 'Invalid user id' })
   async getById(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findUserById(id)
+    return this.userService.findUserById(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -50,10 +73,12 @@ export class UsersController {
   @ApiInternalServerErrorResponse({ description: 'Could not update user' })
   @ApiBadRequestResponse({ description: 'Invalid user id' })
   @ApiBody({ type: UpdateUserDto, description: 'Fields to update' })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
-    return this.userService.updateUser(id, dto)
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(id, dto);
   }
-
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
