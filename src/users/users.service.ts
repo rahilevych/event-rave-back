@@ -12,9 +12,9 @@ import {
 import * as argon2 from 'argon2';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from 'generated/prisma';
 import { AuthService } from 'src/auth/auth.service';
 import { TokenService } from 'src/token/token.service';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
@@ -98,7 +98,9 @@ export class UsersService {
         this.logger.error(`User not found: ${id}`);
         throw new NotFoundException('User not found');
       }
-      return user;
+      return {
+        user: { id: user.id, fullName: user.fullName, email: user.email },
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -110,6 +112,7 @@ export class UsersService {
   }
 
   async updateUser(id: number, data: Partial<User>) {
+    this.logger.log(`User id : ${id}`);
     if (!id) throw new BadRequestException('Invalid user id');
     try {
       const user = await this.databaseService.user.update({
@@ -120,7 +123,9 @@ export class UsersService {
         this.logger.error(`User not found: ${id}`);
         throw new NotFoundException('User not found');
       }
-      return user;
+      return {
+        user: { id: user.id, fullName: user.fullName, email: user.email },
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -135,7 +140,9 @@ export class UsersService {
     try {
       const user = await this.databaseService.user.delete({ where: { id } });
       if (!user) throw new NotFoundException('User not found');
-      return user;
+      return {
+        user: { id: user.id, fullName: user.fullName, email: user.email },
+      };
     } catch (error) {
       this.logger.error('Error deleting user', error);
       if (error instanceof HttpException) {

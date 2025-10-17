@@ -32,13 +32,15 @@ export class AuthController {
       dto.email,
       dto.password,
     );
-
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       maxAge: 15 * 24 * 60 * 60 * 1000,
     });
 
-    return { token: tokens.accessToken, user };
+    return {
+      token: tokens.accessToken,
+      user: { id: user.id, fullName: user.fullName, email: user.email },
+    };
   }
 
   @Post('logout')
