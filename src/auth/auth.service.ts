@@ -31,9 +31,9 @@ export class AuthService {
   async generateTokens(userId: number) {
     if (!userId) throw new BadRequestException('Invalid user id');
     try {
-      const user = await this.usersService.findUserById(userId);
-      if (!user) throw new NotFoundException('User not found');
-      const payload = { email: user.email, userId: user.id };
+      const data = await this.usersService.findUserById(userId);
+      if (!data) throw new NotFoundException('User not found');
+      const payload = { email: data.user.email, userId: data.user.id };
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: '30m',
@@ -85,7 +85,7 @@ export class AuthService {
 
       await this.tokenService.saveTokenInDB(tokens.refreshToken);
       const user = await this.usersService.findUserById(payload.userId);
-      const { id, email } = user;
+      const { id, email } = user.user;
       return { tokens, user: { id, email } };
     } catch (error) {
       if (error instanceof HttpException) {

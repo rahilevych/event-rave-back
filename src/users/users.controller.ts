@@ -77,6 +77,7 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
+    console.log('hi from bla bla');
     return this.userService.updateUser(id, dto);
   }
 
