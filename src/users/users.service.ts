@@ -14,7 +14,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { TokenService } from 'src/token/token.service';
-import { User } from 'generated/prisma';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -99,7 +99,12 @@ export class UsersService {
         throw new NotFoundException('User not found');
       }
       return {
-        user: { id: user.id, fullName: user.fullName, email: user.email },
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+        },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -111,7 +116,7 @@ export class UsersService {
     }
   }
 
-  async updateUser(id: number, data: Partial<User>) {
+  async updateUser(id: number, data: Partial<UpdateUserDto>) {
     this.logger.log(`User id : ${id}`);
     if (!id) throw new BadRequestException('Invalid user id');
     try {

@@ -4,13 +4,12 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(cookieParser())
-   app.enableCors({
-    origin: 'http://localhost:5173', 
-    credentials: true,               
+  app.use(cookieParser());
+  app.enableCors({
+    origin: ['http://localhost:5173', 'https://event-rave.vercel.app'],
+    credentials: true,
   });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -32,7 +31,7 @@ async function bootstrap() {
     })
     .addGlobalResponse({
       status: 500,
-      description: 'Internal server error'
+      description: 'Internal server error',
     })
     .setTitle('Event Rave')
     .setDescription('The Event Rave API description')
