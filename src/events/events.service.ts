@@ -100,6 +100,7 @@ export class EventsService {
         },
         include: { categories: true },
       });
+      if (!event) throw new NotFoundException('Event not found');
       return event;
     } catch (error) {
       if (error instanceof HttpException) {
@@ -114,6 +115,7 @@ export class EventsService {
       const event = await this.databaseService.event.delete({
         where: { id },
       });
+      if (!event) throw new NotFoundException('Event not found');
       return event;
     } catch (error) {
       if (error instanceof HttpException) {

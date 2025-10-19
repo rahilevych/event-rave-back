@@ -33,7 +33,11 @@ export class AuthService {
     try {
       const data = await this.usersService.findUserById(userId);
       if (!data) throw new NotFoundException('User not found');
-      const payload = { email: data.user.email, userId: data.user.id };
+      const payload = {
+        email: data.user.email,
+        userId: data.user.id,
+        role: data.user.role,
+      };
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: '30m',

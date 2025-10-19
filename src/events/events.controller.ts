@@ -23,14 +23,17 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @ApiTags('events')
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Post('create')
-  @ApiOperation({ summary: 'Create user' })
+  @ApiOperation({ summary: 'Create event' })
   @ApiOkResponse({ description: 'Event successfully registered' })
   @ApiBadRequestResponse({ description: 'Category id is incorrect!' })
   @ApiInternalServerErrorResponse({ description: 'Could not create event' })
@@ -60,7 +63,9 @@ export class EventsController {
   async getEventById(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.findEventById(id);
   }
-  @UseGuards(JwtAuthGuard)
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Patch(':id')
   @ApiOperation({ summary: 'Update event' })
   @ApiOkResponse({ description: 'Event successfully updated' })
@@ -78,7 +83,9 @@ export class EventsController {
   ) {
     return this.eventsService.updateEvent(id, dto);
   }
-  @UseGuards(JwtAuthGuard)
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete event' })
   @ApiOkResponse({ description: 'Event successfully deleted' })

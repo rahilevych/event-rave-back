@@ -99,7 +99,12 @@ export class UsersService {
         throw new NotFoundException('User not found');
       }
       return {
-        user: { id: user.id, fullName: user.fullName, email: user.email },
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+        },
       };
     } catch (error) {
       if (error instanceof HttpException) {
