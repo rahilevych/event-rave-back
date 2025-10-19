@@ -14,7 +14,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { TokenService } from 'src/token/token.service';
-import { User } from 'generated/prisma';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -111,7 +111,7 @@ export class UsersService {
     }
   }
 
-  async updateUser(id: number, data: Partial<User>) {
+  async updateUser(id: number, data: Partial<UpdateUserDto>) {
     this.logger.log(`User id : ${id}`);
     if (!id) throw new BadRequestException('Invalid user id');
     try {
