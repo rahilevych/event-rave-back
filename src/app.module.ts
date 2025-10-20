@@ -8,9 +8,10 @@ import { TokenModule } from './token/token.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { EventsModule } from './events/events.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule],
+  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule],
   controllers: [AppController],
   providers: [AppService, JwtStrategy],
 })
