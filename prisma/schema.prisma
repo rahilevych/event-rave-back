@@ -49,6 +49,7 @@ model Event{
   venue String
   imageUrl String
   organizer String
+  price Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   categories Category[] @relation("EventCategories")

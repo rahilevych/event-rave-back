@@ -247,6 +247,7 @@ async function seedEvents() {
       ],
     },
   };
+  const price = parseFloat((Math.random() * 100 + 10).toFixed(2));
   const categories = await prisma.category.findMany();
 
   for (const category of categories) {
@@ -268,7 +269,7 @@ async function seedEvents() {
         0,
         0,
       );
-
+      const price = parseFloat((Math.random() * 100 + 10).toFixed(2));
       const title = titles[i];
       const imageUrl = images[Math.floor(Math.random() * images.length)];
 
@@ -280,6 +281,7 @@ async function seedEvents() {
           city: randomCity,
           venue: randomVenue,
           imageUrl,
+          price,
           organizer: randomOrganizer,
           categories: { connect: [{ id: category.id }] },
         },
