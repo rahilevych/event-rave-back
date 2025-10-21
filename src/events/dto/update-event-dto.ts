@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateEventDto } from './create-event.dto';
 import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 @ApiExtraModels(CreateEventDto)
 export class UpdateEventDto extends PartialType(CreateEventDto) {
@@ -59,4 +59,12 @@ export class UpdateEventDto extends PartialType(CreateEventDto) {
   @IsString()
   @IsNotEmpty()
   organizer!: string;
+
+  @ApiPropertyOptional({
+    example: 100,
+    description: 'Event price',
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  price!: number;
 }
