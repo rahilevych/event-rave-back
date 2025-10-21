@@ -35,6 +35,8 @@ export class AuthController {
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       maxAge: 15 * 24 * 60 * 60 * 1000,
+      // secure: true,
+      // sameSite: 'none',
     });
 
     return {
@@ -61,6 +63,8 @@ export class AuthController {
     res.cookie('refreshToken', '', {
       httpOnly: true,
       maxAge: 0,
+      secure: true,
+      sameSite: 'none',
     });
     return { message: 'User successfully logged out' };
   }
@@ -81,6 +85,8 @@ export class AuthController {
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       maxAge: 15 * 24 * 60 * 60 * 1000,
+      secure: true,
+      sameSite: 'none',
     });
     return { token: tokens.accessToken, user };
   }

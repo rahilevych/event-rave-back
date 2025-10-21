@@ -3,6 +3,7 @@ import {
   IsArray,
   IsDateString,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -35,6 +36,14 @@ export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
   city!: string;
+
+  @ApiProperty({
+    example: 100,
+    description: 'Event price',
+  })
+  @IsNumber()
+  @IsNotEmpty()
+  price!: number;
 
   @ApiProperty({
     example: 'Conference Hall',
