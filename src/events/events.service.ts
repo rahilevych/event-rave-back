@@ -13,7 +13,7 @@ import { UpdateEventDto } from './dto/update-event-dto';
 export class EventsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAll(categoryId: number) {
+  async findAllByCategory(categoryId: number) {
     if (!categoryId) throw new BadRequestException('Category id is incorrect!');
     try {
       const events = await this.databaseService.event.findMany({
@@ -27,6 +27,20 @@ export class EventsService {
         throw new NotFoundException(
           `No events found for category id ${categoryId}!`,
         );
+      }
+      return events;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Could not find events!');
+    }
+  }
+  async findAll() {
+    try {
+      const events = await this.databaseService.event.findMany({});
+      if (events.length === 0) {
+        throw new NotFoundException(`No events found`);
       }
       return events;
     } catch (error) {
