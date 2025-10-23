@@ -36,6 +36,28 @@ export class EventsService {
       throw new InternalServerErrorException('Could not find events!');
     }
   }
+  async findAllBySearchText(text: string) {
+    if (!text) throw new BadRequestException('Search text is incorrect');
+    try {
+      const events = await this.databaseService.event.findMany({
+        where: {
+          OR: [
+            { title: { contains: text, mode: 'insensitive' } },
+            { description: { contains: text, mode: 'insensitive' } },
+          ],
+        },
+      });
+      if (events.length === 0) {
+        throw new NotFoundException(`No events found`);
+      }
+      return events;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Could not find events!');
+    }
+  }
   async findAll() {
     try {
       const events = await this.databaseService.event.findMany({});
