@@ -48,9 +48,14 @@ export class EventsController {
   @ApiNotFoundResponse({ description: 'No events found for category with id' })
   @ApiInternalServerErrorResponse({ description: 'Could not find events!' })
   @ApiBadRequestResponse({ description: 'Category id is incorrect!' })
-  async getAllEvents(@Query('categoryId') categoryId?: number) {
+  async getAllEvents(
+    @Query() query: { categoryId?: number; searchText?: string },
+  ) {
+    const { categoryId, searchText } = query;
     if (categoryId) {
       return this.eventsService.findAllByCategory(categoryId);
+    } else if (searchText) {
+      return this.eventsService.findAllBySearchText(searchText);
     } else {
       return this.eventsService.findAll();
     }
