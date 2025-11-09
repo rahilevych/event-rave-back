@@ -37,13 +37,14 @@ model Category{
   id Int @id @default(autoincrement())
   name String @unique
   imageUrl String
+  description String
   events Event[] @relation("EventCategories")
 }
 
 model Event{
   id Int @id @default(autoincrement())
   title String
-  description String?
+  description String
   date DateTime
   city String
   venue String
