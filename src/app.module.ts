@@ -9,10 +9,13 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { EventsModule } from './events/events.module';
 import { CategoriesModule } from './categories/categories.module';
+import { LikesController } from './likes/likes.controller';
+import { LikesService } from './likes/likes.service';
+import { LikesModule } from './likes/likes.module';
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule],
-  controllers: [AppController],
-  providers: [AppService, JwtStrategy],
+  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule],
+  controllers: [AppController, LikesController],
+  providers: [AppService, JwtStrategy, LikesService],
 })
 export class AppModule { }
