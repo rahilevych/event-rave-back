@@ -13,63 +13,52 @@ import { UpdateEventDto } from './dto/update-event-dto';
 export class EventsService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAllByCategory(categoryId: number) {
-    if (!categoryId) throw new BadRequestException('Category id is incorrect!');
+  async findAllEvents(params?: {
+    categoryId?: number;
+    searchText?: string;
+    userId?: number;
+  }) {
+    const { categoryId, searchText, userId } = params || {};
+
     try {
-      const events = await this.databaseService.event.findMany({
-        where: {
-          categories: {
-            some: { id: categoryId },
-          },
-        },
-      });
-      if (events.length === 0) {
-        throw new NotFoundException(
-          `No events found for category id ${categoryId}!`,
-        );
+      const where: any = {};
+
+      if (categoryId) {
+        where.categories = { some: { id: categoryId } };
       }
+
+      if (searchText) {
+        where.OR = [
+          { title: { contains: searchText, mode: 'insensitive' } },
+          { description: { contains: searchText, mode: 'insensitive' } },
+        ];
+      }
+
+      const events = await this.databaseService.event.findMany({ where });
+
+      if (events.length === 0) {
+        throw new NotFoundException('No events found!');
+      }
+
+      if (userId) {
+        const likedEvents = await this.databaseService.like.findMany({
+          where: { userId },
+          select: { eventId: true },
+        });
+        const likedIds = likedEvents.map((like) => like.eventId);
+
+        return events.map((event) => ({
+          ...event,
+          likedByUser: likedIds.includes(event.id),
+        }));
+      }
+
       return events;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Could not find events!');
-    }
-  }
-  async findAllBySearchText(text: string) {
-    if (!text) throw new BadRequestException('Search text is incorrect');
-    try {
-      const events = await this.databaseService.event.findMany({
-        where: {
-          OR: [
-            { title: { contains: text, mode: 'insensitive' } },
-            { description: { contains: text, mode: 'insensitive' } },
-          ],
-        },
-      });
-      if (events.length === 0) {
-        throw new NotFoundException(`No events found`);
-      }
-      return events;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Could not find events!');
-    }
-  }
-  async findAll() {
-    try {
-      const events = await this.databaseService.event.findMany({});
-      if (events.length === 0) {
-        throw new NotFoundException(`No events found`);
-      }
-      return events;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Could not find events!');
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException(
+        'Server error.Could not fetch events!',
+      );
     }
   }
   async createEvent(сreateEventDto: CreateEventDto) {
@@ -96,8 +85,10 @@ export class EventsService {
       throw new InternalServerErrorException('Could not create event!');
     }
   }
-  async findEventById(id: number) {
+
+  async findEventById(id: number, userId?: number) {
     if (!id) throw new BadRequestException('Event id is incorrect!');
+
     try {
       const event = await this.databaseService.event.findUnique({
         where: { id },
@@ -107,15 +98,23 @@ export class EventsService {
       if (!event) {
         throw new NotFoundException(`Event with id ${id} not found!`);
       }
+      if (userId) {
+        const liked = await this.databaseService.like.findUnique({
+          where: { userId_eventId: { userId, eventId: id } },
+        });
 
-      return event;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
+        return {
+          ...event,
+          likedByUser: !!liked,
+        };
       }
+      return { ...event, likedByUser: false };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Could not find event!');
     }
   }
+
   async updateEvent(id: number, dto: UpdateEventDto) {
     if (!id || !dto)
       throw new BadRequestException(

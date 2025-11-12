@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
@@ -25,6 +26,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { OptionalJwtAuthGuard } from 'src/auth/optional.guard';
 
 @ApiTags('events')
 @Controller('events')
@@ -42,6 +44,7 @@ export class EventsController {
     return this.eventsService.createEvent(dto);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Find all events for specifique category' })
   @ApiOkResponse({ description: 'Events are found' })
@@ -52,16 +55,17 @@ export class EventsController {
     @Query('categoryId', new ParseIntPipe({ optional: true }))
     categoryId?: number,
     @Query('searchText') searchText?: string,
+    @Req() req?: any,
   ) {
-    if (categoryId) {
-      return this.eventsService.findAllByCategory(categoryId);
-    } else if (searchText) {
-      return this.eventsService.findAllBySearchText(searchText);
-    } else {
-      return this.eventsService.findAll();
-    }
+    const userId = req?.user?.user?.id ?? null;
+    return this.eventsService.findAllEvents({
+      categoryId,
+      searchText,
+      userId,
+    });
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Find event by id' })
   @ApiOkResponse({ description: 'Event is found' })
@@ -70,8 +74,9 @@ export class EventsController {
     description: 'Event with id ${id} not found!',
   })
   @ApiBadRequestResponse({ description: 'Event id is incorrect!' })
-  async getEventById(@Param('id', ParseIntPipe) id: number) {
-    return this.eventsService.findEventById(id);
+  async getEventById(@Param('id', ParseIntPipe) id: number, @Req() req?: any) {
+    const userId = req?.user?.user?.id ?? null;
+    return this.eventsService.findEventById(id, userId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

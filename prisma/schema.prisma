@@ -20,8 +20,8 @@ model User {
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
   refreshTokens RefreshToken[]
+  likes Like[]
 }
 
 model RefreshToken {
@@ -54,4 +54,14 @@ model Event{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   categories Category[] @relation("EventCategories")
+  likes Like[]
+}
+model Like{
+  id Int @id @default(autoincrement())
+  userId Int
+  eventId Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  @@unique([userId, eventId])    
 }
