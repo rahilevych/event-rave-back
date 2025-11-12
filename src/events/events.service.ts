@@ -87,7 +87,6 @@ export class EventsService {
   }
 
   async findEventById(id: number, userId?: number) {
-    console.log(userId);
     if (!id) throw new BadRequestException('Event id is incorrect!');
 
     try {
@@ -103,7 +102,7 @@ export class EventsService {
         const liked = await this.databaseService.like.findUnique({
           where: { userId_eventId: { userId, eventId: id } },
         });
-        console.log(liked);
+
         return {
           ...event,
           likedByUser: !!liked,
