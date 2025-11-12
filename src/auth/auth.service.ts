@@ -89,8 +89,8 @@ export class AuthService {
 
       await this.tokenService.saveTokenInDB(tokens.refreshToken);
       const user = await this.usersService.findUserById(payload.userId);
-      const { id, email } = user.user;
-      return { tokens, user: { id, email } };
+
+      return { tokens, user };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

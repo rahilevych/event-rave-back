@@ -88,6 +88,13 @@ export class AuthController {
       secure: true,
       sameSite: 'none',
     });
-    return { token: tokens.accessToken, user };
+    return {
+      token: tokens.accessToken,
+      user: {
+        id: user.user.id,
+        fullName: user.user.fullName,
+        email: user.user.email,
+      },
+    };
   }
 }
