@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -35,8 +36,11 @@ export class CategoriesController {
   @ApiOkResponse({ description: 'Categories are found' })
   @ApiNotFoundResponse({ description: 'No categories found' })
   @ApiInternalServerErrorResponse({ description: 'Could not find categories' })
-  getAllCategories() {
-    return this.categoriesService.findAll();
+  getAllCategories(@Query('skip') skip?: string, @Query('take') take?: string) {
+    return this.categoriesService.findAll({
+      skip: skip ? parseInt(skip, 5) : 0,
+      take: take ? parseInt(take, 5) : 5,
+    });
   }
 
   @Get(':id')

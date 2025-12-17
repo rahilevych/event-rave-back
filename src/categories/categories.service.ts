@@ -13,9 +13,13 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAll() {
+  async findAll(params?: { skip?: number; take?: number }) {
+    const { skip = 0, take = 10 } = params || {};
     try {
-      const categories = await this.databaseService.category.findMany({});
+      const categories = await this.databaseService.category.findMany({
+        skip,
+        take,
+      });
       if (categories.length === 0)
         throw new NotFoundException('No categories found');
       return categories;
