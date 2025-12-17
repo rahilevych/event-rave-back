@@ -17,8 +17,16 @@ export class EventsService {
     categoryId?: number;
     searchText?: string;
     userId?: number;
+    limit?: number;
+    offset?: number;
   }) {
-    const { categoryId, searchText, userId } = params || {};
+    const {
+      categoryId,
+      searchText,
+      userId,
+      limit = 5,
+      offset = 0,
+    } = params || {};
 
     try {
       const where: any = {};
@@ -34,7 +42,12 @@ export class EventsService {
         ];
       }
 
-      const events = await this.databaseService.event.findMany({ where });
+      const events = await this.databaseService.event.findMany({
+        where,
+        take: limit,
+        skip: offset,
+        orderBy: { createdAt: 'desc' },
+      });
 
       if (events.length === 0) {
         throw new NotFoundException('No events found!');

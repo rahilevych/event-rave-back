@@ -46,7 +46,7 @@ export class EventsController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  @ApiOperation({ summary: 'Find all events for specifique category' })
+  @ApiOperation({ summary: 'Find all events for specific category' })
   @ApiOkResponse({ description: 'Events are found' })
   @ApiNotFoundResponse({ description: 'No events found for category with id' })
   @ApiInternalServerErrorResponse({ description: 'Could not find events' })
@@ -55,13 +55,18 @@ export class EventsController {
     @Query('categoryId', new ParseIntPipe({ optional: true }))
     categoryId?: number,
     @Query('searchText') searchText?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
     @Req() req?: any,
   ) {
-    const userId = req?.user?.user?.id ?? null;
+    const userId = req?.user?.id ?? null;
+
     return this.eventsService.findAllEvents({
       categoryId,
       searchText,
       userId,
+      limit,
+      offset,
     });
   }
 
