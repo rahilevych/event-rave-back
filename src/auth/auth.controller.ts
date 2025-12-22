@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import express from 'express';
@@ -69,7 +69,7 @@ export class AuthController {
     return { message: 'User successfully logged out' };
   }
 
-  @Post('refresh')
+  @Get('refresh')
   @ApiOperation({ summary: 'Refresh access and refresh tokens' })
   @ApiOkResponse({ description: 'Tokens were updated' })
   @ApiBadRequestResponse({ description: 'Refresh token is required' })
@@ -80,7 +80,8 @@ export class AuthController {
     @Req() req: express.Request,
     @Res({ passthrough: true }) res: express.Response,
   ) {
-    const refreshToken = req.cookies['refreshToken'];
+    const refreshToken = req.cookies.refreshToken;
+
     const { tokens, user } = await this.authService.refreshTokens(refreshToken);
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
@@ -88,6 +89,7 @@ export class AuthController {
       secure: true,
       sameSite: 'none',
     });
+
     return {
       token: tokens.accessToken,
       user: {

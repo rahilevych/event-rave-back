@@ -46,7 +46,6 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: '15d',
       });
-
       return { accessToken, refreshToken };
     } catch (error) {
       this.logger.error('Failed to generate tokens', error);
@@ -65,7 +64,7 @@ export class AuthService {
           token: refreshToken,
         },
       });
-      if (!storedToken) throw new NotFoundException('Token not found');
+      if (!storedToken) throw new UnauthorizedException('Token not found');
       return true;
     } catch (error) {
       if (error instanceof HttpException) {
@@ -77,19 +76,22 @@ export class AuthService {
 
   async refreshTokens(refreshToken: string) {
     try {
+      if (!refreshToken)
+        throw new BadRequestException('Refresh token not found');
+
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
       const isExist = await this.verifyToken(refreshToken);
       if (!isExist) {
+        await this.tokenService.deleteTokenfromDB(refreshToken);
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
-      await this.tokenService.deleteTokenfromDB(refreshToken);
-      const tokens = await this.generateTokens(payload.userId);
 
+      const tokens = await this.generateTokens(payload.userId);
+      await this.tokenService.deleteTokenfromDB(refreshToken);
       await this.tokenService.saveTokenInDB(tokens.refreshToken);
       const user = await this.usersService.findUserById(payload.userId);
-
       return { tokens, user };
     } catch (error) {
       if (error instanceof HttpException) {
