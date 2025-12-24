@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -57,9 +58,12 @@ export class EventsController {
     @Query('searchText') searchText?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
+    @Query('onlyLiked', new ParseBoolPipe({ optional: true }))
+    onlyLiked?: boolean,
     @Req() req?: any,
   ) {
-    const userId = req?.user?.id ?? null;
+    const userId = req?.user?.user.id ?? null;
+    console.log('userId', userId);
 
     return this.eventsService.findAllEvents({
       categoryId,
@@ -67,6 +71,7 @@ export class EventsController {
       userId,
       limit,
       offset,
+      onlyLiked,
     });
   }
 

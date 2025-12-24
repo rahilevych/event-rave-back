@@ -38,8 +38,8 @@ export class CategoriesController {
   @ApiInternalServerErrorResponse({ description: 'Could not find categories' })
   getAllCategories(@Query('skip') skip?: string, @Query('take') take?: string) {
     return this.categoriesService.findAll({
-      skip: skip ? parseInt(skip, 5) : 0,
-      take: take ? parseInt(take, 5) : 5,
+      skip: skip ? parseInt(skip, 10) : 0,
+      take: take ? parseInt(take, 10) : 5,
     });
   }
 

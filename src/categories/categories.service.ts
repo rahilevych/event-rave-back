@@ -20,8 +20,6 @@ export class CategoriesService {
         skip,
         take,
       });
-      if (categories.length === 0)
-        throw new NotFoundException('No categories found');
       return categories;
     } catch (error) {
       if (error instanceof HttpException) throw error;

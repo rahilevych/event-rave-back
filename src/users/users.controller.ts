@@ -26,7 +26,6 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import express from 'express';
-
 @ApiTags('users')
 @Controller('users')
 export class UsersController {

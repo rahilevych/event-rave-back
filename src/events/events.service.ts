@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { UpdateEventDto } from './dto/update-event-dto';
+import { Prisma } from 'generated/prisma/browser';
 
 @Injectable()
 export class EventsService {
@@ -19,17 +20,13 @@ export class EventsService {
     userId?: number;
     limit?: number;
     offset?: number;
+    onlyLiked?: boolean;
   }) {
-    const {
-      categoryId,
-      searchText,
-      userId,
-      limit = 5,
-      offset = 0,
-    } = params || {};
+    const { categoryId, searchText, userId, limit, offset, onlyLiked } =
+      params || {};
 
     try {
-      const where: any = {};
+      const where: Prisma.EventWhereInput = {};
 
       if (categoryId) {
         where.categories = { some: { id: categoryId } };
@@ -41,28 +38,34 @@ export class EventsService {
           { description: { contains: searchText, mode: 'insensitive' } },
         ];
       }
-
-      const events = await this.databaseService.event.findMany({
-        where,
-        take: limit,
-        skip: offset,
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (events.length === 0) {
-        throw new NotFoundException('No events found!');
+      if (onlyLiked && userId) {
+        where.likes = { some: { userId } };
       }
+      const query: Prisma.EventFindManyArgs = {
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: userId
+          ? { likes: { where: { userId }, select: { eventId: true } } }
+          : undefined,
+      };
+
+      if (limit !== undefined) query.take = limit;
+      if (offset !== undefined) query.skip = offset;
+
+      const events = await this.databaseService.event.findMany(query);
+      const likedEventIds = userId
+        ? (
+            await this.databaseService.like.findMany({
+              where: { userId, eventId: { in: events.map((e) => e.id) } },
+              select: { eventId: true },
+            })
+          ).map((l) => l.eventId)
+        : [];
 
       if (userId) {
-        const likedEvents = await this.databaseService.like.findMany({
-          where: { userId },
-          select: { eventId: true },
-        });
-        const likedIds = likedEvents.map((like) => like.eventId);
-
         return events.map((event) => ({
           ...event,
-          likedByUser: likedIds.includes(event.id),
+          likedByUser: likedEventIds.includes(event.id),
         }));
       }
 
