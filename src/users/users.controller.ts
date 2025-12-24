@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -25,6 +26,7 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import express from 'express';
+
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
@@ -55,16 +57,16 @@ export class UsersController {
     };
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Find user by id' })
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiOperation({ summary: 'Get current user' })
   @ApiOkResponse({ description: 'User found' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @ApiInternalServerErrorResponse({ description: 'Could not find user' })
   @ApiBadRequestResponse({ description: 'Invalid user id' })
-  async getById(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findUserById(id);
+  async getMe(@Req() req: any) {
+    return req.user;
   }
-
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @ApiOperation({ summary: 'Update user' })
@@ -77,7 +79,6 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
-    console.log('hi from bla bla');
     return this.userService.updateUser(id, dto);
   }
 
