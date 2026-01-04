@@ -63,7 +63,6 @@ export class EventsController {
     @Req() req?: any,
   ) {
     const userId = req?.user?.user.id ?? null;
-    console.log('userId', userId);
 
     return this.eventsService.findAllEvents({
       categoryId,
