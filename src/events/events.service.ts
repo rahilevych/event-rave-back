@@ -9,6 +9,7 @@ import {
 import { DatabaseService } from 'src/database/database.service';
 import { UpdateEventDto } from './dto/update-event-dto';
 import { Prisma } from '@prisma/client';
+import { DateFilter, getDateFilterRange } from 'src/common/utils/dataFilter';
 
 @Injectable()
 export class EventsService {
@@ -21,9 +22,19 @@ export class EventsService {
     limit?: number;
     offset?: number;
     onlyLiked?: boolean;
+    filter?: DateFilter;
+    date?: string;
   }) {
-    const { categoryId, searchText, userId, limit, offset, onlyLiked } =
-      params || {};
+    const {
+      categoryId,
+      searchText,
+      userId,
+      limit,
+      offset,
+      onlyLiked,
+      filter,
+      date,
+    } = params || {};
 
     try {
       const where: Prisma.EventWhereInput = {};
@@ -37,6 +48,10 @@ export class EventsService {
           { title: { contains: searchText, mode: 'insensitive' } },
           { description: { contains: searchText, mode: 'insensitive' } },
         ];
+      }
+      if (filter && filter !== 'all') {
+        const { start, end } = getDateFilterRange(filter, date);
+        where.date = { gte: start, lt: end };
       }
       if (onlyLiked && userId) {
         where.likes = { some: { userId } };
