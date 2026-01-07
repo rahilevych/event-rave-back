@@ -28,6 +28,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { OptionalJwtAuthGuard } from 'src/auth/optional.guard';
+import type { DateFilter } from 'src/common/utils/dataFilter';
 
 @ApiTags('events')
 @Controller('events')
@@ -60,6 +61,8 @@ export class EventsController {
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
     @Query('onlyLiked', new ParseBoolPipe({ optional: true }))
     onlyLiked?: boolean,
+    @Query('filter') filter?: DateFilter,
+    @Query('date') date?: string,
     @Req() req?: any,
   ) {
     const userId = req?.user?.user.id ?? null;
@@ -71,6 +74,8 @@ export class EventsController {
       limit,
       offset,
       onlyLiked,
+      filter,
+      date,
     });
   }
 
