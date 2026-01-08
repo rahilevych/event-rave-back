@@ -37,7 +37,7 @@ export class UsersService {
         this.logger.error(
           `Attempt to register with existing email: ${createUserDto.email}`,
         );
-        throw new ConflictException('Email is already in use');
+        throw new BadRequestException('Email is already in use');
       }
       const passwordHash = await argon2.hash(createUserDto.password, {
         type: argon2.argon2id,
