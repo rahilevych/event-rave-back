@@ -142,6 +142,9 @@ export class UsersService {
   async deleteUser(id: number) {
     if (!id) throw new BadRequestException('Invalid user id');
     try {
+      await this.databaseService.refreshToken.deleteMany({
+        where: { userId: id },
+      });
       const user = await this.databaseService.user.delete({ where: { id } });
       if (!user) throw new NotFoundException('User not found');
       return {

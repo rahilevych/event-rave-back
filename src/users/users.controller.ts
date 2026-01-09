@@ -82,13 +82,14 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
+  @Delete('me')
   @ApiOperation({ summary: 'Delete user' })
   @ApiOkResponse({ description: 'User successfully deleted' })
   @ApiNotFoundResponse({ description: 'User not found' })
   @ApiInternalServerErrorResponse({ description: 'Could not delete user' })
   @ApiBadRequestResponse({ description: 'Invalid user id' })
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.deleteUser(id);
+  async delete(@Req() req: any) {
+    console.log('user id', req.user);
+    return this.userService.deleteUser(req.user.user.id);
   }
 }
