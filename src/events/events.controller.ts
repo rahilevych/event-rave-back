@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -59,8 +58,6 @@ export class EventsController {
     @Query('searchText') searchText?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
-    @Query('onlyLiked', new ParseBoolPipe({ optional: true }))
-    onlyLiked?: boolean,
     @Query('filter') filter?: DateFilter,
     @Query('date') date?: string,
     @Req() req?: any,
@@ -73,9 +70,30 @@ export class EventsController {
       userId,
       limit,
       offset,
-      onlyLiked,
+
       filter,
       date,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('liked')
+  @ApiOperation({ summary: 'Find all events for specific category' })
+  @ApiOkResponse({ description: 'Events are found' })
+  @ApiNotFoundResponse({ description: 'No events found for category with id' })
+  @ApiInternalServerErrorResponse({ description: 'Could not find events' })
+  @ApiBadRequestResponse({ description: 'Category id is incorrect' })
+  async getLikedEventsByUser(
+    @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Req() req?: any,
+  ) {
+    const userId = req?.user?.user.id ?? null;
+
+    return this.eventsService.getLikedEventsByUser({
+      userId,
+      limit,
+      offset,
     });
   }
 

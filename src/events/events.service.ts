@@ -5,6 +5,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { UpdateEventDto } from './dto/update-event-dto';
@@ -25,16 +26,8 @@ export class EventsService {
     filter?: DateFilter;
     date?: string;
   }) {
-    const {
-      categoryId,
-      searchText,
-      userId,
-      limit,
-      offset,
-      onlyLiked,
-      filter,
-      date,
-    } = params || {};
+    const { categoryId, searchText, userId, limit, offset, filter, date } =
+      params || {};
 
     try {
       const where: Prisma.EventWhereInput = {};
@@ -53,9 +46,7 @@ export class EventsService {
         const { start, end } = getDateFilterRange(filter, date);
         where.date = { gte: start, lt: end };
       }
-      if (onlyLiked && userId) {
-        where.likes = { some: { userId } };
-      }
+
       const query: Prisma.EventFindManyArgs = {
         where,
         orderBy: { createdAt: 'desc' },
@@ -91,6 +82,28 @@ export class EventsService {
         'Server error.Could not fetch events!',
       );
     }
+  }
+  async getLikedEventsByUser(params: {
+    limit?: number;
+    offset?: number;
+    userId: number;
+  }) {
+    const { userId, limit, offset } = params || {};
+    if (!userId) throw new UnauthorizedException('Unauthorized access');
+    const events = await this.databaseService.event.findMany({
+      where: {
+        likes: { some: { userId } },
+      },
+      orderBy: { createdAt: 'desc' },
+
+      take: limit,
+      skip: offset,
+    });
+    events.map((event) => ({
+      ...event,
+      likedByUser: true,
+    }));
+    return events;
   }
   async createEvent(сreateEventDto: CreateEventDto) {
     if (!сreateEventDto)
