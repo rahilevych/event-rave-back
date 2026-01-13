@@ -40,7 +40,7 @@ export class AuthService {
       };
       const accessToken = await this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-        expiresIn: '30m',
+        expiresIn: '15m',
       });
       const refreshToken = await this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
@@ -102,10 +102,14 @@ export class AuthService {
     }
   }
 
-  async verifyUser(email: string, passpord: string) {
+  async verifyUser(email: string, password: string) {
     const user = await this.usersService.findUserByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
-    const passwordMatches = await argon2.verify(user.passwordHash, passpord);
+    if (!user.passwordHash)
+      throw new BadRequestException(
+        'This account was created via GitHub service. Please login with GitHub ',
+      );
+    const passwordMatches = await argon2.verify(user.passwordHash, password);
     if (!passwordMatches)
       throw new UnauthorizedException('Invalid credentials');
     return user;
@@ -130,5 +134,53 @@ export class AuthService {
       }
       throw new InternalServerErrorException('Could not logout');
     }
+  }
+
+  private clientId = process.env.GITHUB_CLIENT_ID;
+  private clientSecret = process.env.GITHUB_CLIENT_SECRET;
+  private redirectUrl = process.env.GITHUB_REDIRECT_URL;
+
+  getGithubRedirectUrl(): string {
+    const url = new URL('https://github.com/login/oauth/authorize');
+    url.searchParams.set('client_id', this.clientId!);
+    url.searchParams.set('redirect_uri', this.redirectUrl!);
+    url.searchParams.set('scope', 'read:user user:email');
+    url.searchParams.set('allow_signup', 'true');
+    return url.toString();
+  }
+
+  async getProfile(code: string) {
+    const tokenRes = await fetch(
+      'https://github.com/login/oauth/access_token',
+      {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new URLSearchParams({
+          client_id: this.clientId!,
+          client_secret: this.clientSecret!,
+          code,
+          redirect_uri: this.redirectUrl!,
+        }),
+      },
+    );
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+
+    if (!accessToken) {
+      throw new Error('GitHub access token not received');
+    }
+    const profileRes = await fetch('https://api.github.com/user', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const profile = await profileRes.json();
+
+    const emailRes = await fetch('https://api.github.com/user/emails', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const emails = await emailRes.json();
+    const primaryEmail = emails.find((email: any) => email.primary)?.email;
+
+    return { ...profile, email: primaryEmail };
   }
 }
