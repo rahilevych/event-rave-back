@@ -66,6 +66,75 @@ export class UsersService {
       throw new InternalServerErrorException('Could not create user');
     }
   }
+  async createOAuthUser({
+    email,
+    fullName,
+    provider,
+    providerUserId,
+  }: {
+    email: string;
+    fullName?: string;
+    provider: string;
+    providerUserId: string;
+  }) {
+    const user = await this.databaseService.user.create({
+      data: {
+        email,
+        fullName: fullName ?? 'Unknown',
+        oauthAccounts: {
+          create: {
+            provider,
+            providerUserId,
+          },
+        },
+      },
+    });
+    return user;
+  }
+
+  async resolveOAuthUser({
+    email,
+    fullName,
+    provider,
+    providerUserId,
+  }: {
+    email: string;
+    fullName?: string;
+    provider: string;
+    providerUserId: string;
+  }) {
+    const oauth = await this.databaseService.oAuthAccount.findUnique({
+      where: {
+        provider_providerUserId: {
+          provider,
+          providerUserId,
+        },
+      },
+      include: { user: true },
+    });
+    if (oauth) {
+      return oauth.user;
+    }
+    const user = await this.databaseService.user.findUnique({
+      where: { email },
+    });
+    if (user) {
+      await this.databaseService.oAuthAccount.create({
+        data: {
+          userId: user.id,
+          provider,
+          providerUserId,
+        },
+      });
+      return user;
+    }
+    return this.createOAuthUser({
+      email,
+      fullName,
+      provider,
+      providerUserId,
+    });
+  }
 
   async findUserByEmail(email: string) {
     if (!email) throw new BadRequestException('Invalid user email');
@@ -87,6 +156,7 @@ export class UsersService {
       throw new InternalServerErrorException('Could not find user');
     }
   }
+
   async findUserById(id: number) {
     if (!id) throw new BadRequestException('Invalid user id');
     try {
