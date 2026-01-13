@@ -99,11 +99,11 @@ export class EventsService {
       take: limit,
       skip: offset,
     });
-    events.map((event) => ({
+
+    return events.map((event) => ({
       ...event,
       likedByUser: true,
     }));
-    return events;
   }
   async createEvent(сreateEventDto: CreateEventDto) {
     if (!сreateEventDto)
