@@ -12,9 +12,10 @@ import { CategoriesModule } from './categories/categories.module';
 import { LikesController } from './likes/likes.controller';
 import { LikesService } from './likes/likes.service';
 import { LikesModule } from './likes/likes.module';
+import { GithhubAuthModule } from './githhub-auth/githhub-auth.module';
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule],
+  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule, GithhubAuthModule],
   controllers: [AppController, LikesController],
   providers: [AppService, JwtStrategy, LikesService],
 })
