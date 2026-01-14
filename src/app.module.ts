@@ -9,14 +9,23 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { EventsModule } from './events/events.module';
 import { CategoriesModule } from './categories/categories.module';
-import { LikesController } from './likes/likes.controller';
 import { LikesService } from './likes/likes.service';
 import { LikesModule } from './likes/likes.module';
-import { GithhubAuthModule } from './githhub-auth/githhub-auth.module';
+import { GithubAuthModule } from './github-auth/github-auth.module';
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule, GithhubAuthModule],
-  controllers: [AppController, LikesController],
+  imports: [
+    UsersModule,
+    DatabaseModule,
+    AuthModule,
+    TokenModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    EventsModule,
+    CategoriesModule,
+    LikesModule,
+    GithubAuthModule.forRootAsync(),
+  ],
+  controllers: [AppController],
   providers: [AppService, JwtStrategy, LikesService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import express from 'express';
@@ -12,7 +12,6 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { UsersService } from 'src/users/users.service';
 import { TokenService } from 'src/token/token.service';
 
 @ApiTags('auth')
@@ -20,8 +19,6 @@ import { TokenService } from 'src/token/token.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-
-    private readonly usersService: UsersService,
     private readonly tokensService: TokenService,
   ) {}
 
@@ -89,7 +86,8 @@ export class AuthController {
   ) {
     const refreshToken = req.cookies.refreshToken;
 
-    const { tokens, user } = await this.authService.refreshTokens(refreshToken);
+    const { tokens, user } =
+      await this.tokensService.refreshTokens(refreshToken);
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       maxAge: 15 * 24 * 60 * 60 * 1000,
@@ -104,35 +102,5 @@ export class AuthController {
         email: user.user.email,
       },
     };
-  }
-
-  @Get('github')
-  async redirectToGithub(@Res() res: any) {
-    const url = this.authService.getGithubRedirectUrl();
-    return res.redirect(url);
-  }
-
-  @ApiCookieAuth('refreshToken')
-  @Get('github/oauth/callback')
-  async githubCallback(@Query('code') code: string, @Res() res: any) {
-    const profile = await this.authService.getProfile(code);
-
-    const user = await this.usersService.resolveOAuthUser({
-      email: profile.email,
-      fullName: profile.name || profile.login,
-      provider: 'github',
-      providerUserId: profile.id.toString(),
-    });
-
-    const tokens = await this.authService.generateTokens(user.id);
-    await this.tokensService.saveTokenInDB(tokens.refreshToken);
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      maxAge: 15 * 24 * 60 * 60 * 1000,
-      secure: true,
-      sameSite: 'none',
-    });
-
-    return res.redirect(`${process.env.FRONTEND_URL}/oauth/success`);
   }
 }
