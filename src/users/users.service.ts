@@ -11,7 +11,6 @@ import {
 import * as argon2 from 'argon2';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { AuthService } from 'src/auth/auth.service';
 import { TokenService } from 'src/token/token.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -21,8 +20,7 @@ export class UsersService {
 
   constructor(
     private readonly databaseService: DatabaseService,
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
+    @Inject(forwardRef(() => TokenService))
     private readonly tokenService: TokenService,
   ) {}
 
@@ -50,7 +48,7 @@ export class UsersService {
         },
       });
 
-      const tokens = await this.authService.generateTokens(user.id);
+      const tokens = await this.tokenService.generateTokens(user.id);
       await this.tokenService.saveTokenInDB(tokens.refreshToken);
 
       this.logger.log(`New user registered: ${user.email}`);
@@ -90,50 +88,6 @@ export class UsersService {
       },
     });
     return user;
-  }
-
-  async resolveOAuthUser({
-    email,
-    fullName,
-    provider,
-    providerUserId,
-  }: {
-    email: string;
-    fullName?: string;
-    provider: string;
-    providerUserId: string;
-  }) {
-    const oauth = await this.databaseService.oAuthAccount.findUnique({
-      where: {
-        provider_providerUserId: {
-          provider,
-          providerUserId,
-        },
-      },
-      include: { user: true },
-    });
-    if (oauth) {
-      return oauth.user;
-    }
-    const user = await this.databaseService.user.findUnique({
-      where: { email },
-    });
-    if (user) {
-      await this.databaseService.oAuthAccount.create({
-        data: {
-          userId: user.id,
-          provider,
-          providerUserId,
-        },
-      });
-      return user;
-    }
-    return this.createOAuthUser({
-      email,
-      fullName,
-      provider,
-      providerUserId,
-    });
   }
 
   async findUserByEmail(email: string) {
