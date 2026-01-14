@@ -12,9 +12,10 @@ import { CategoriesModule } from './categories/categories.module';
 import { LikesController } from './likes/likes.controller';
 import { LikesService } from './likes/likes.service';
 import { LikesModule } from './likes/likes.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
-  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule],
+  imports: [UsersModule, DatabaseModule, AuthModule, TokenModule, ConfigModule.forRoot({ isGlobal: true }), EventsModule, CategoriesModule, LikesModule, StripeModule],
   controllers: [AppController, LikesController],
   providers: [AppService, JwtStrategy, LikesService],
 })
